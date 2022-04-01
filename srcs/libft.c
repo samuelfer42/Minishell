@@ -6,7 +6,7 @@
 /*   By: safernan <safernan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 04:36:38 by safernan          #+#    #+#             */
-/*   Updated: 2022/03/31 05:48:52 by safernan         ###   ########.fr       */
+/*   Updated: 2022/04/01 03:30:33 by safernan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,193 +22,103 @@ size_t	ft_strlen(const char *str)
 	return (i);
 }
 
-int			ft_count_words_util(char const *s, t_split *sp)
+static void		fill_line(char const *s, char c, int count, char *new)
 {
-	while (s[sp->i] && (s[sp->i] == '\'' || s[sp->i] == '"'))
-	{
-		while (s[sp->i] && s[sp->i] == '"')
-			sp->i = protection(s, sp->i, '"', sp);
-		while (s[sp->i] && s[sp->i] == '\'')
-			sp->i = protection(s, sp->i, '\'', sp);
-	}
-	if (sp->i == sp->len)
-		return (-1);
-	if (s[sp->i] == '\\')
-		sp->i++;
-	return (0);
-}
+	int		i;
+	int		booleen;
+	int		nbr;
 
-static int	ft_count_words(char const *s, char c, t_split *sp)
-{
-	sp->i = -1;
-	sp->len = (int)ft_strlen(s);
-	sp->count_words = 0;
-	while (s[++sp->i])
+	i = -1;
+	nbr = 0;
+	booleen = 0;
+	while (nbr < count + 1)
 	{
-		if (ft_count_words_util(s, sp) == -1)
-			break ;
-		if (s[sp->i] && s[sp->i] == c && s[sp->i + 1] != c &&
-			s[sp->i - 1] != '\\')
+		i++;
+		if (s[i] != c && booleen == 0)
 		{
-			sp->j = sp->i + 1;
-			while (s[sp->j] && sp->j == ' ')
-				sp->j++;
-			if (sp->j != (int)ft_strlen(s))
-				sp->count_words++;
+			nbr++;
+			booleen = 1;
 		}
-		if (sp->i == sp->len)
-			break ;
+		if (s[i] == c && booleen == 1)
+			booleen = 0;
 	}
-	sp->count_words++;
-	return (sp->count_words);
+	while (s[i + booleen - 1] != c && s[i + booleen - 1])
+	{
+		new[booleen - 1] = s[i + booleen - 1];
+		booleen++;
+	}
+	return ;
 }
 
-int			ft_malloc_words_util(char const *s, char c, t_split *sp)
+static int		len_word(char const *s, char c, int count)
 {
-	while (s[sp->j] == '\'' || s[sp->j] == '"')
-	{
-		while (s[sp->j] == '"')
-			sp->j = protection(s, sp->j, '"', sp);
-		while (s[sp->j] == '\'')
-			sp->j = protection(s, sp->j, '\'', sp);
-	}
-	if (s[sp->j] && s[sp->j] == '\\')
-	{
-		sp->j++;
-		sp->k++;
-	}
-	if ((s[sp->j] && s[sp->j] == '\0')
-		|| (s[sp->j] == c && s[sp->j - 1] != '\\'))
-		return (-1);
-	return (0);
-}
+	int		i;
+	int		booleen;
+	int		nbr;
 
-int			ft_malloc_words(char const *s, char **str,
-			int words, t_split *sp)
-{
-	sp->i = -1;
-	sp->j = -1;
-	while (++sp->i < words)
+	i = -1;
+	nbr = 0;
+	booleen = 0;
+	while (nbr < count + 1)
 	{
-		sp->k = 0;
-		while (s[++sp->j] && (s[sp->j] != sp->c || (s[sp->j] == sp->c
-			&& (sp->j == 0 || s[sp->j - 1] == '\\'))))
+		i++;
+		if (s[i] != c && booleen == 0)
 		{
-			if (ft_malloc_words_util(s, sp->c, sp) == -1)
-				break ;
-			sp->k++;
-			if (sp->j == (int)ft_strlen(s))
-				break ;
+			nbr++;
+			booleen = 1;
 		}
-		while (s[sp->j] && s[sp->j] == sp->c)
-			sp->j++;
-		sp->j--;
-		if ((str[sp->i] = (char *)malloc(sizeof(char) * (sp->k + 1))) == NULL)
-		{
-			ft_leah_minishell(str, sp->i);
-			return (0);
-		}
+		if (s[i] == c && booleen == 1)
+			booleen = 0;
 	}
-	return (1);
-}
-
-char		**ft_minishell_split(char const *s, char c)
-{
-	char	**str;
-	int		count_words;
-	t_split	split;
-
-	count_words = 0;
-	split.c = c;
-	if (!s)
-		return (NULL);
-	count_words = ft_count_words(s, c, &split);
-	if ((str = (char **)malloc(sizeof(char *) * (count_words + 1))) == NULL)
-		return (NULL);
-	if (!ft_malloc_words(s, str, count_words, &split))
-		return (NULL);
-	split.str = str;
-	ft_write_words_minishell(s, count_words, &split);
-	str[count_words] = 0;
-	return (str);
-}
-
-
-void			ft_leah_minishell(char **str, int index)
-{
-	while (index)
+	while (s[i] != c && s[i])
 	{
-		free(str[index]);
-		index--;
+		i++;
+		booleen++;
 	}
-	free(str);
+	return (booleen - 1);
 }
 
-int				protection(char const *s, int i, char c, t_split *split)
+static int		nbr_word(char const *s, char c)
 {
-	i++;
-	while (s[i] && s[i] != c)
+	int		i;
+	int		booleen;
+	int		nbr;
+
+	nbr = 0;
+	i = 0;
+	booleen = 0;
+	while (s[i])
 	{
-		if (s[i] == '\\')
+		if (s[i] != c && booleen == 0)
 		{
-			i++;
-			split->k++;
+			nbr++;
+			booleen = 1;
 		}
-		split->k++;
+		if (s[i] == c && booleen == 1)
+			booleen = 0;
 		i++;
 	}
-	if (i == (int)ft_strlen(s))
-		return (i);
-	i++;
-	split->k = split->k + 2;
-	return (i);
+	return (nbr);
 }
 
-void			ft_write_words_util(char const *s, t_split *sp)
+char			**ft_split(char const *s, char c)
 {
-	char	quote;
+	char	**new;
+	int		i;
 
-	while (s[sp->j] && (s[sp->j] == '\'' || s[sp->j] == '"'))
+	i = 0;
+	if (s == 0)
+		return (0);
+	if (!(new = malloc(sizeof(char*) * (nbr_word(s, c) + 1))))
+		return (0);
+	while (i < nbr_word(s, c))
 	{
-		quote = s[sp->j];
-		sp->str[sp->i][sp->k++] = s[sp->j++];
-		while (s[sp->j] && s[sp->j] != quote)
-		{
-			if (s[sp->j] == '\\')
-				sp->str[sp->i][sp->k++] = s[sp->j++];
-			if (sp->j == (int)ft_strlen(s))
-				return ;
-			sp->str[sp->i][sp->k++] = s[sp->j++];
-		}
-		if (sp->j == (int)ft_strlen(s))
-			return ;
-		sp->str[sp->i][sp->k++] = s[sp->j++];
+		if (!(new[i] = malloc(sizeof(char) * (len_word(s, c, i) + 1))))
+			return (0);
+		fill_line(s, c, i, new[i]);
+		new[i][len_word(s, c, i)] = 0;
+		i++;
 	}
-	if (s[sp->j] == '\\')
-		sp->str[sp->i][sp->k++] = s[sp->j++];
-}
-
-void			ft_write_words_minishell(char const *s, int words, t_split *sp)
-{
-	sp->i = -1;
-	sp->j = 0;
-	while (s && s[sp->j] && ++sp->i < words)
-	{
-		sp->k = 0;
-		while (s[sp->j] && s[sp->j] == sp->c)
-			sp->j++;
-		while ((s[sp->j] && (s[sp->j] != sp->c
-			|| (s[sp->j] == sp->c && sp->j > 0
-			&& s[sp->j - 1] == '\\'))))
-		{
-			ft_write_words_util(s, sp);
-			if (sp->j && s[sp->j - 1] != '\\' && (s[sp->j] == sp->c
-				|| s[sp->j] == '\0'))
-				break ;
-			if (sp->j == (int)ft_strlen(s))
-				break ;
-			sp->str[sp->i][sp->k++] = s[sp->j++];
-		}
-		sp->str[sp->i][sp->k] = '\0';
-	}
+	new[nbr_word(s, c)] = 0;
+	return (new);
 }

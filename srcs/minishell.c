@@ -6,7 +6,7 @@
 /*   By: safernan <safernan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/29 23:21:53 by safernan          #+#    #+#             */
-/*   Updated: 2022/03/31 06:25:57 by safernan         ###   ########.fr       */
+/*   Updated: 2022/04/01 04:16:58 by safernan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@ int main(int argc, char **argv, char **env)
 {
     char    *buffer;
     int     i;
-    i = 0;
     while (1)
     {
         buffer = readline("safernan $>");
@@ -26,6 +25,9 @@ int main(int argc, char **argv, char **env)
             return (0);
         }
         add_history(buffer);
+		printf("-------------------------------------\n");
+        printf("char *buffer readline -> : %s\n", buffer);
+		printf("-------------------------------------\n");
         parsing(buffer, i);
         free(buffer);
         
@@ -35,16 +37,19 @@ int main(int argc, char **argv, char **env)
 
 int    parsing(char *buffer, int i)
 {
-    char    **str;
+    char    **str = NULL;
     t_sep	*list;
- 
-  //  str = (char **)malloc(sizeof(char *) * 1);
     
+	str = ft_split(buffer, ' ');
+	i = 0;
     while (str[++i])
     {
-      //  str = ft_split(buffer, ';');
-        list = add_cell(list, str[i], i);
-       // print_list(list);
+      list = add_cell(list, str[i], i);
+	  printf("=================\n");
+	  printf("%s\n", str[i]);
+	  printf("=================\n");
     }
+	str = malloc(sizeof(char*) * (i + 1));
+	str[i] = NULL;
     return (0);
 }
